@@ -349,7 +349,7 @@ for (j in 1:v) {
 }
 ```
 
-Figure \@ref(cverr) shows the sum of squared errors as a function of $k$. We see that the errors decrease quite a lot at first, e.g., for $k = 1, \dots, 7$; then the errors begin to increase slowly because the neighbors become too spread out geographically.
+Figure \@ref(fig:cverr) shows the sum of squared errors as a function of $k$. We see that the errors decrease quite a lot at first, e.g., for $k = 1, \dots, 7$; then the errors begin to increase slowly because the neighbors become too spread out geographically.
 
 ```{r cverr, fig.cap="Cross Validated Selection of $k$. This line plot shows the sum of square errors as a function of the number of neighbors used in predicting the location of a new observation. The sums of squared errors are obtained via cross-validation of the offline data."}
 ggplot(data_frame(k = 1:K, err = err), aes(k, err)) +
