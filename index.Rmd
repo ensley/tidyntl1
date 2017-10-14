@@ -7,6 +7,7 @@ site: bookdown::bookdown_site
 output:
   bookdown::tufte_html_book:
     toc: yes
+    css: toc.css
     toc_depth: 1
     split_by: chapter
     fig_caption: true
