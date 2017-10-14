@@ -196,7 +196,7 @@ smooth_ss &lt;-<span class="st"> </span>one_ap_angle <span class="op">%&gt;%</sp
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">viz_smooth &lt;-<span class="st"> </span><span class="kw">predictSurface</span>(smooth_ss)</code></pre></div>
 <p>Then we plot the predicted signal strength values using <code>plot.surface()</code> as follows:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot.surface</span>(viz_smooth, <span class="dt">type =</span> <span class="st">&#39;C&#39;</span>)</code></pre></div>
-<p><img src="_main_files/figure-html/unnamed-chunk-39-1.png" width="672"  /></p>
+<p><img src="_main_files/figure-html/unnamed-chunk-35-1.png" width="672"  /></p>
 <p>Lastly, we add the locations where the measurements were taken:</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">points</span>(one_ap_angle<span class="op">$</span>posX, one_ap_angle<span class="op">$</span>posY, <span class="dt">pch =</span> <span class="dv">19</span>, <span class="dt">cex =</span> <span class="fl">0.5</span>)</code></pre></div>
 <p>We can wrap this plotting routine into its own function so that we can parameterize the MAC address and angle, and if desired, other plotting parameters. Our function, called <code>surfaceSS()</code>, has 3 arguments: data for the offline summary data frame, and <code>mac</code> and <code>angle</code>, which supply the MAC address and angle to select the subset of the data that we want smoothed and plotted.</p>
