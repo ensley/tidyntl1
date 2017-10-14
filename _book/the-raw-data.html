@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Predicting Location via Indoor Positioning Systems" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="author" content="John Ensley" />
+
+<meta name="date" content="2017-10-12" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+
+<meta name="description" content="Predicting Location via Indoor Positioning Systems">
+
+<title>Predicting Location via Indoor Positioning Systems</title>
+
+<link href="libs/tufte-css/tufte.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="index.html#preface">Preface</a></li>
+<li><a href="introduction.html#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="the-raw-data.html#the-raw-data"><span class="toc-section-number">2</span> The Raw Data</a></li>
+<li><a href="cleaning-the-data-and-building-a-representation-for-analysis.html#cleaning-the-data-and-building-a-representation-for-analysis"><span class="toc-section-number">3</span> Cleaning the Data and Building a Representation for Analysis</a></li>
+<li><a href="signal-strength-analysis.html#signal-strength-analysis"><span class="toc-section-number">4</span> Signal Strength Analysis</a></li>
+<li><a href="nearest-neighbor-methods-to-predict-location.html#nearest-neighbor-methods-to-predict-location"><span class="toc-section-number">5</span> Nearest Neighbor Methods to Predict Location</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="the-raw-data" class="section level1">
+<h1><span class="header-section-number">2</span> The Raw Data</h1>
+<p>Two relevant data sets for developing an IPS are available on the <a href="https://crawdad.org/mannheim/compass/20080411/">CRAWDAD site</a> (A Community Resource for Archiving Wireless Data At Dartmouth)<span class="citation">(King et al. <label for="tufte-mn-6" class="margin-toggle">&#8853;</label><input type="checkbox" id="tufte-mn-6" class="margin-toggle">2008<span class="marginnote">King, Thomas, Stephan Kopf, Thomas Haenselmann, Christian Lubberger, and Wolfgang Effelsberg. 2008. “CRAWDAD Dataset Mannheim/Compass (V. 2008-04-11).” Downloaded from <a href="https://crawdad.org/mannheim/compass/20080411" class="uri">https://crawdad.org/mannheim/compass/20080411</a>.</span>)</span>. One is a reference set, termed “offline,” that contains signal strengths measured using a hand-held device on a grid of 166 points spaced 1 meter apart in the hallways of one floor of a building at the University of Mannheim. The floor plan, which measures about 15 meters by 36 meters, is displayed in Figure <a href="the-raw-data.html#fig:floorplan">2.1</a>. The grey circles on the plan mark the locations where the offline measurements were taken and the black squares mark 6 access points. These reference locations give us a calibration set of signal strengths for the building, and we use them to build our model to predict the locations of the hand-held device when its position is unknown.</p>
+<div class="figure"><span id="fig:floorplan"></span>
+<p class="caption marginnote shownote">
+Figure 2.1: Floor plan of the test environment. In this floor plan, the 6 fixed access points are denoted by black square markers, the offline/training data were collected at the locations marked by grey dots, and the online measurements were recorded at randomly selected points indicated with black dots. The grey dots are spaced one meter apart.
+</p>
+<img src="floorplan.png" alt="Floor plan of the test environment. In this floor plan, the 6 fixed access points are denoted by black square markers, the offline/training data were collected at the locations marked by grey dots, and the online measurements were recorded at randomly selected points indicated with black dots. The grey dots are spaced one meter apart." width="504"  />
+</div>
+<p>In addition to the <span class="math inline">\((x,y)\)</span> coordinates of the hand-held device, the orientation of the device was also provided. Signal strengths were recorded at 8 orientations in 45 degree increments (i.e., 0, 45, 90, and so on). Further, the documentation for the data indicates that 110 signal strength measurements were recorded to each of the 6 access points for every location-orientation combination.</p>
+<p><span class="newthought">In addition to the offline data,</span> a second set of recordings, called the “online” data, is available for testing models for predicting location. In these data, 60 locations and orientations are chosen at random and 110 signals are measured from them to each access point. The test locations are marked by black dots in Figure <a href="the-raw-data.html#fig:floorplan">2.1</a>. In both the offline and online data some of these 110 signal strength values were not recorded. Additionally, measurements from other hand-held devices, e.g., phone or laptop, in the vicinity of the experimental unit appear in some offline records.</p>
+<p>The documentation for the data <span class="citation">(King et al. <label for="tufte-mn-7" class="margin-toggle">&#8853;</label><input type="checkbox" id="tufte-mn-7" class="margin-toggle">2008<span class="marginnote">King, Thomas, Stephan Kopf, Thomas Haenselmann, Christian Lubberger, and Wolfgang Effelsberg. 2008. “CRAWDAD Dataset Mannheim/Compass (V. 2008-04-11).” Downloaded from <a href="https://crawdad.org/mannheim/compass/20080411" class="uri">https://crawdad.org/mannheim/compass/20080411</a>.</span>)</span> describes the format of the data file. Additionally, we can examine the files ourselves with a plain text editor, and we find that each of the two files (offline and online) have the same basic format and start with something similar to</p>
+<pre><code># timestamp=2006-02-11 08:31:58
+# usec=250
+# minReadings=110
+t=1139643118358;id=00:02:2D:21:0F:33;pos=0.0,0.0,0.0;degree=0.0;00:14:bf:b1:97:8a=-38,2437000000,3;00:14:bf:b1:97:90=-56,2427000000,3;00:0f:a3:39:e1:c0=-53,2462000000,3;00:14:bf:b1:97:8d=-65,2442000000,3;00:14:bf:b1:97:81=-65,2422000000,3;00:14:bf:3b:c7:c6=-66,2432000000,3;00:0f:a3:39:dd:cd=-75,2412000000,3;00:0f:a3:39:e0:4b=-78,2462000000,3;00:0f:a3:39:e2:10=-87,2437000000,3;02:64:fb:68:52:e6=-88,2447000000,1;02:00:42:55:31:00=-84,2457000000,1</code></pre>
+<p>The available documentation indicates that the format of the data is:</p>
+<pre><code>t=&quot;Timestamp&quot;;
+id=&quot;MACofScanDevice&quot;;
+pos=&quot;RealPosition&quot;;
+degree=&quot;orientation&quot;;
+MACofResponse1=&quot;SignalStrengthValue,Frequency,Mode&quot;; ...
+MACofResponseN=&quot;SignalStrengthValue,Frequency,Mode&quot;</code></pre>
+<p>where the units of measurement are shown in Table <a href="the-raw-data.html#tab:units">2.1</a>. The MAC (media access control) variable refers to the MAC address of a hardware device, which is a unique identifier that allows a network card for a computer, access point, or other piece of equipment to be identified on a network. By convention, this identifier is written in the form <code>mm:mm:mm:ss:ss:ss</code> where <code>mm</code> and <code>ss</code> are 2 hexadecimal digits (0, 1, …, 9, a, b, c, d, e, f). The first of these 3 sets of pairs of digits, i.e., <code>mm:mm:mm</code>, identifies the manufacturer of the equipment. The second set of 3 pairs (the <code>ss</code>) identifies the particular piece of equipment, both the model and the unique device. The <code>MACofResponse1 ... MACofResponseN</code> in these data indicate that one line consists of a variable number of MAC address measurements. That is, these records are not of equal length, but form ragged arrays that depend on the number of signals detected. For example, consider another line (the 2,000th) in the input file:</p>
+<pre><code>t=1139644637174;id=00:02:2D:21:0F:33;pos=2.0,0.0,0.0;degree=45.5;00:14:bf:b1:97:8a=-33,2437000000,3;00:14:bf:b1:97:8a=-38,2437000000,3;00:0f:a3:39:e1:c0=-54,2462000000,3;00:14:bf:b1:97:90=-59,2427000000,3;00:14:bf:b1:97:8d=-70,2442000000,3;00:0f:a3:39:e2:10=-88,2437000000,3;00:0f:a3:39:dd:cd=-67,2412000000,3;02:00:42:55:31:00=-84,2457000000,1</code></pre>
+<p>We notice several things: this record has 8 readings; the MAC addresses appear in a different order than in the first record; there are 2 readings from the same access point (the 8a access point); and one of the 8 addresses belongs to an <code>adhoc</code> device because, according to Table <a href="the-raw-data.html#tab:units">2.1</a>, the mode digit indicates whether the recording is for an <code>adhoc</code> device (1) or access point (3). If we look at the first observation again, we notice that there are more than 6 MAC addresses with a mode of 3. The “extras” are from other floors in the building.</p>
+<p><!--
+<caption>--><span class="marginnote shownote"><span id="tab:units">Table 2.1: </span>Units of Measurement. This table provides the units of measurement for the variables in the offline and online data.</span><!--</caption>--></p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Variable</th>
+<th align="left">Units</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">t</td>
+<td align="left">timestamp in milliseconds since midnight, January 1, 1970 UTC</td>
+</tr>
+<tr class="even">
+<td align="left">id</td>
+<td align="left">MAC address of the scanning device</td>
+</tr>
+<tr class="odd">
+<td align="left">pos</td>
+<td align="left">the physical coordinate of the scanning device</td>
+</tr>
+<tr class="even">
+<td align="left">degree</td>
+<td align="left">orientation of the user carrying the scanning device in degrees</td>
+</tr>
+<tr class="odd">
+<td align="left">MAC</td>
+<td align="left">MAC address of a responding peer (e.g., an access point or a device in adhoc mode) with the corresponding values for signal strength in dBm (Decibel-milliwatts), the channel frequency and its mode (access point = 3, device in adhoc mode = 1)</td>
+</tr>
+</tbody>
+</table>
+<p>Now that we have a sense of the format of the input file, we can determine how to read the data into a structure that is conducive to analysis. Let’s think about how we want to ultimately represent the resulting data in R. There are two reasonably obvious choices. The first is to have a row in a data frame for each row in the input file. In this case, the variables are time, mac-id, <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span>, <span class="math inline">\(z\)</span> (for the hand-held device’s location), orientation, and then 4 variables for each of the MAC addresses for which we have a signal. These 4 variables are signal, channel, and type of device, as well as the MAC address. Since the raw observations have a different number of recorded signals, our data frame needs enough columns to accommodate the largest number of recordings.</p>
+<p>A second approach is to have the same initial variables describing the hand-held device, i.e., time, MAC address, location, and orientation. After this, we have just 4 other variables: the MAC address of the device from which we received a signal, the signal, the channel, and the type of device. In this scenario, we have a row in our data frame for each signal received. That is, each line in the input file turns into multiple rows in the data frame, corresponding to the number of ‘;’-separated MAC addresses in that line. For example, the first record in the input file becomes 11 rows and the 2000th observation becomes 8 rows in the data frame.</p>
+<p>The first approach yields a natural representation that more directly corresponds to the format of the input file. It also avoids repeating the time and location information and so seems more memory efficient. One of the difficulties it presents, however, is that we have to determine how many columns we need, or more specifically, how many MAC addresses received the signal from the device. Even if we drop the <code>adhoc</code> readings, we still have to contend with a different ordering of recordings and multiple measurements from the same MAC address. We most likely need two passes of the data to create our data frame: one to determine the unique MAC addresses and the second to organize the data. While we avoid repeating some information, e.g., timestamp, we need to use <code>NA</code> values for the observations that do not have recorded signals from all of the MAC addresses. If there are many of these, then the second approach may actually be more memory efficient. The second approach also appears simpler to create.</p>
+<p>With the second approach, we can avoid two passes of the data and read the file into a data frame in just one pass. And, this data structure allows us to use group-by operations on the MAC addresses. For now, we adopt the second approach. Later in our work, we create a data frame with the first format. For this, we do not need to return to the original file, but create the alternative data frame from the existing one.</p>
+<p>Another consideration in determining how to read the data into R is whether or not the “comment” lines occur only at the beginning/top of the file. We can search in the file for lines that start with a ‘#’ character. To do this, we read the entire document into R using <code>readLines()</code> with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">txt &lt;-<span class="st"> </span><span class="kw">readLines</span>(<span class="st">&#39;offline.final.trace.txt&#39;</span>)</code></pre></div>
+<p>Each line in the offline file has been read into R as a string in the character vector <code>txt</code>. We use the <code>stringr::str_detect()</code> function to locate lines/strings that begin with a ‘#’ character and tally them with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">sum</span>(<span class="kw">str_detect</span>(txt, <span class="st">&#39;^#&#39;</span>))</code></pre></div>
+<pre><code>## [1] 5312</code></pre>
+<p>Additionally, we use <code>length()</code> as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(txt)</code></pre></div>
+<pre><code>## [1] 151392</code></pre>
+<p>to determine that there are 151,392 lines in the offline file. According to the documentation we expect there to be 146,080 lines in the file (166 locations × 8 angles × 110 recordings). The difference between these two (151,392 and 146,080) is 5,312, exactly the number of comments lines.</p>
+<p>Generally a good rule of thumb to follow is to check our assumptions about the format of a file and not just look at the first few lines.</p>
+<div id="processing-the-raw-data" class="section level2">
+<h2><span class="header-section-number">2.1</span> Processing the Raw Data</h2>
+<p>Now that we have determined the desired target representation of the data in R, we can write the code to extract the data from the input file and manipulate it into that form. The data are not in a rectangular form so we cannot simply use a function such as <code>read.table()</code>. However, there is structure in the observations that we can use to process the lines of text. For example, the main data elements are separated by semicolons. Let’s see how the semicolon splits the fourth line, i.e., the first line that is not a comment:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">str_split</span>(txt[<span class="dv">4</span>], <span class="st">&#39;;&#39;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">drop</span>()</code></pre></div>
+<pre><code>##  [1] &quot;t=1139643118358&quot;                   
+##  [2] &quot;id=00:02:2D:21:0F:33&quot;              
+##  [3] &quot;pos=0.0,0.0,0.0&quot;                   
+##  [4] &quot;degree=0.0&quot;                        
+##  [5] &quot;00:14:bf:b1:97:8a=-38,2437000000,3&quot;
+##  [6] &quot;00:14:bf:b1:97:90=-56,2427000000,3&quot;
+##  [7] &quot;00:0f:a3:39:e1:c0=-53,2462000000,3&quot;
+##  [8] &quot;00:14:bf:b1:97:8d=-65,2442000000,3&quot;
+##  [9] &quot;00:14:bf:b1:97:81=-65,2422000000,3&quot;
+## [10] &quot;00:14:bf:3b:c7:c6=-66,2432000000,3&quot;
+## [11] &quot;00:0f:a3:39:dd:cd=-75,2412000000,3&quot;
+## [12] &quot;00:0f:a3:39:e0:4b=-78,2462000000,3&quot;
+## [13] &quot;00:0f:a3:39:e2:10=-87,2437000000,3&quot;
+## [14] &quot;02:64:fb:68:52:e6=-88,2447000000,1&quot;
+## [15] &quot;02:00:42:55:31:00=-84,2457000000,1&quot;</code></pre>
+<p>Within each of these shorter strings, the “name” of the variable is separated by an ‘=’ character from the associated value. In some cases this value contains multiple values where the separator is a ‘,’. For example, “pos=0.0,0.0,0.0” consists of 3 position variables that are not named. We can take this vector, which we created by splitting on the semi-colon, and further split each element at the ‘=’ characters. Then we can process the resulting strings by splitting them at the ‘,’ characters. We can use</p>
+<pre><code>tokens &lt;- stringr::str_split(txt[4], &#39;[;=,]&#39;)</code></pre>
+<p>to split at a ‘;’, ‘=’, or ‘,’ character. The following function takes one line and creates a data frame of all of the signals from that particular device.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">process_line &lt;-<span class="st"> </span><span class="cf">function</span>(x) {
+  tokens &lt;-<span class="st"> </span><span class="kw">str_split</span>(x, <span class="st">&#39;[;=,]&#39;</span>, <span class="dt">simplify =</span> <span class="ot">TRUE</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">drop</span>()
+  <span class="cf">if</span> (<span class="kw">length</span>(tokens) <span class="op">&lt;=</span><span class="st"> </span><span class="dv">10</span>) <span class="kw">return</span>(<span class="ot">NULL</span>)
+  mac_signals &lt;-<span class="st"> </span><span class="kw">matrix</span>(tokens[<span class="op">-</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>)],
+                        <span class="dt">ncol =</span> <span class="dv">4</span>,
+                        <span class="dt">byrow =</span> <span class="ot">TRUE</span>)
+  device_info &lt;-<span class="st"> </span><span class="kw">matrix</span>(tokens[<span class="kw">c</span>(<span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">6</span><span class="op">:</span><span class="dv">8</span>, <span class="dv">10</span>)],
+                        <span class="dt">nrow =</span> <span class="kw">nrow</span>(mac_signals),
+                        <span class="dt">ncol =</span> <span class="dv">6</span>,
+                        <span class="dt">byrow =</span> <span class="ot">TRUE</span>)
+  df &lt;-<span class="st"> </span><span class="kw">as_data_frame</span>(<span class="kw">cbind</span>(device_info, mac_signals))
+  <span class="kw">names</span>(df) &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;scan_mac&#39;</span>, <span class="st">&#39;posX&#39;</span>, <span class="st">&#39;posY&#39;</span>, <span class="st">&#39;posZ&#39;</span>,
+                 <span class="st">&#39;orientation&#39;</span>, <span class="st">&#39;mac&#39;</span>, <span class="st">&#39;signal&#39;</span>, <span class="st">&#39;channel&#39;</span>, <span class="st">&#39;type&#39;</span>)
+  df
+}</code></pre></div>
+<p>Next we’ll use <code>purrr::map_dfr()</code> to apply this function to every line of the input file and concatenate the results row-wise into a data frame. To make sure everything is working, let’s try it on the first few lines.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">tmp &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(txt[<span class="dv">4</span><span class="op">:</span><span class="dv">20</span>], process_line)
+<span class="kw">dim</span>(tmp)</code></pre></div>
+<pre><code>## [1] 170  10</code></pre>
+<p>Now we can try it on the entire dataset. We discard the lines starting with the comment character ‘#’ and then pass each remaining line to <code>processLine()</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">lines &lt;-<span class="st"> </span>txt[<span class="op">!</span><span class="kw">str_detect</span>(txt, <span class="st">&#39;^#&#39;</span>)]
+offline &lt;-<span class="st"> </span><span class="kw">map_dfr</span>(lines, process_line)
+<span class="kw">dim</span>(offline)</code></pre></div>
+<pre><code>## [1] 1181628      10</code></pre>
+<p>Our data frame consists of character-valued variables. A next step is to convert these values into appropriate data types, e.g., convert signal strength to numeric, and to further clean the data as needed. This is the topic of the next chapter.</p>
+
+</div>
+</div>
+<p style="text-align: center;">
+<a href="introduction.html"><button class="btn btn-default">Previous</button></a>
+<a href="cleaning-the-data-and-building-a-representation-for-analysis.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+
+</body>
+</html>

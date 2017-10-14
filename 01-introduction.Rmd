@@ -1,0 +1,18 @@
+# Introduction
+
+`r tufte::newthought('The growth of wireless networking')` has generated commercial and research interests in statistical methods to reliably track people and things inside stores, hospitals, warehouses, and factories. Global positioning systems (GPS) do not work reliably inside buildings, but with the proliferation of wireless local area networks (LANs), indoor positioning systems (IPS) can utilize WiFi signals detected from network access points to answer questions such as: where is a piece of equipment in a hospital? where am I? and who are my neighbors? Ideally, with minimal training, calibration, and equipment, these questions can be answered well in near real-time.
+
+To build an indoor positioning system requires a reference set of data where the signal strength between a hand-held device such as a cellular phone or laptop and fixed access points (routers) are measured at known locations throughout the building. With these training data, we can build a model for the location of a device as a function of the strength of the signals between the device and each access point. Then we use this model to predict the location of a new unknown device based on the detected signals for the device. In this chapter, we examine nearly one million measurements of signal strength recorded at 6 stationary WiFi access points (routers) within a building at the University of Mannheim and develop a statistical IPS.
+
+Our first step in this process is to understand how the data were collected and formatted. In Section 1.2, we do this by reading documentation provided by the researchers who have recorded the data and by carrying out our own investigations. After we have a sense of the data, we organize them into a structure suitable for analysis. We then clean the data in Section 1.3, and before we begin our modeling, we examine signal strength more closely to better understand its statistical properties (in Section 1.4). Then in Section 1.5 we pursue a nearest neighbor method for predicting location and we test it on a second set of data, also provided by the researchers at Mannheim.
+
+## Computational Topics
+
+* string manipulation
+* data structures and representation, including variable length observations 
+* aggregating data in ragged arrays
+* exploratory data analysis and visualization
+* modular functions
+* debugging
+* nearest neighbor methods
+* cross-validation for parameter selection

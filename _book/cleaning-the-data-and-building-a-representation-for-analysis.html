@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Predicting Location via Indoor Positioning Systems" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="author" content="John Ensley" />
+
+<meta name="date" content="2017-10-12" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+
+<meta name="description" content="Predicting Location via Indoor Positioning Systems">
+
+<title>Predicting Location via Indoor Positioning Systems</title>
+
+<link href="libs/tufte-css/tufte.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="index.html#preface">Preface</a></li>
+<li><a href="introduction.html#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="the-raw-data.html#the-raw-data"><span class="toc-section-number">2</span> The Raw Data</a></li>
+<li><a href="cleaning-the-data-and-building-a-representation-for-analysis.html#cleaning-the-data-and-building-a-representation-for-analysis"><span class="toc-section-number">3</span> Cleaning the Data and Building a Representation for Analysis</a></li>
+<li><a href="signal-strength-analysis.html#signal-strength-analysis"><span class="toc-section-number">4</span> Signal Strength Analysis</a></li>
+<li><a href="nearest-neighbor-methods-to-predict-location.html#nearest-neighbor-methods-to-predict-location"><span class="toc-section-number">5</span> Nearest Neighbor Methods to Predict Location</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="cleaning-the-data-and-building-a-representation-for-analysis" class="section level1">
+<h1><span class="header-section-number">3</span> Cleaning the Data and Building a Representation for Analysis</h1>
+<p>We convert the position, signal, and time variables to numeric with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">num_vars &lt;-<span class="st"> </span><span class="kw">c</span>(<span class="st">&#39;time&#39;</span>, <span class="st">&#39;posX&#39;</span>, <span class="st">&#39;posY&#39;</span>, <span class="st">&#39;posZ&#39;</span>, <span class="st">&#39;orientation&#39;</span>, <span class="st">&#39;signal&#39;</span>)
+offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">mutate_at</span>(num_vars, as.numeric)</code></pre></div>
+<p>In our analysis, we plan to use only the signal strengths measured to the fixed access points to develop and test our model, so we will drop all records for <code>adhoc</code> measurements and remove the <code>type</code> variable from our data frame.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">filter</span>(type <span class="op">==</span><span class="st"> </span><span class="dv">3</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>type)
+<span class="kw">dim</span>(offline)</code></pre></div>
+<pre><code>## [1] 978443      9</code></pre>
+<p>We have removed about 200,000 records from our data frame.</p>
+<p>Next we consider the time variable. According to the documentation, time is measured in the number of milliseconds from midnight on January 1st, 1970. This is the origin used for the <code>POSIXt</code> format, but with <code>POSIXt</code>, it is the number of seconds, not milliseconds. We can scale the value of time to seconds and then simply set the class of the <code>time</code> element in order to have the values appear and operate as date-times in R. We keep the more precise time in <code>rawtime</code> just in case we need it. We perform the conversion as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">rawtime =</span> time,
+         <span class="dt">time =</span> lubridate<span class="op">::</span><span class="kw">as_datetime</span>(time <span class="op">/</span><span class="st"> </span><span class="dv">1000</span>))</code></pre></div>
+<p>Now that we have completed these conversions, we check the types of the variables in the data frame with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">unlist</span>(<span class="kw">sapply</span>(offline, class))</code></pre></div>
+<pre><code>##       time1       time2    scan_mac        posX        posY        posZ 
+##   &quot;POSIXct&quot;    &quot;POSIXt&quot; &quot;character&quot;   &quot;numeric&quot;   &quot;numeric&quot;   &quot;numeric&quot; 
+## orientation         mac      signal     channel     rawtime 
+##   &quot;numeric&quot; &quot;character&quot;   &quot;numeric&quot; &quot;character&quot;   &quot;numeric&quot;</code></pre>
+<p>We have the correct shape for the data and even the correct types. We next verify that the actual values of the data look reasonable. There are many approaches we can take to do this. We start by looking at a summary of each numeric variable with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(num_vars) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summary</span>()</code></pre></div>
+<pre><code>##       time                          posX            posY       
+##  Min.   :2006-02-11 07:31:58   Min.   : 0.00   Min.   : 0.000  
+##  1st Qu.:2006-02-11 13:21:27   1st Qu.: 2.00   1st Qu.: 3.000  
+##  Median :2006-02-11 19:57:58   Median :12.00   Median : 6.000  
+##  Mean   :2006-02-16 14:57:37   Mean   :13.52   Mean   : 5.897  
+##  3rd Qu.:2006-02-19 14:52:40   3rd Qu.:23.00   3rd Qu.: 8.000  
+##  Max.   :2006-03-09 20:41:10   Max.   :33.00   Max.   :13.000  
+##       posZ    orientation        signal     
+##  Min.   :0   Min.   :  0.0   Min.   :-99.0  
+##  1st Qu.:0   1st Qu.: 90.0   1st Qu.:-69.0  
+##  Median :0   Median :180.0   Median :-60.0  
+##  Mean   :0   Mean   :167.2   Mean   :-61.7  
+##  3rd Qu.:0   3rd Qu.:270.0   3rd Qu.:-53.0  
+##  Max.   :0   Max.   :359.9   Max.   :-25.0</code></pre>
+<p>We also convert the character variables to factors and examine them with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">select</span>(mac, channel, scan_mac) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">mutate_all</span>(as_factor) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summary</span>()</code></pre></div>
+<pre><code>##                 mac               channel                    scan_mac     
+##  00:0f:a3:39:e1:c0:145862   2462000000:189774   00:02:2D:21:0F:33:978443  
+##  00:0f:a3:39:dd:cd:145619   2437000000:152124                             
+##  00:14:bf:b1:97:8a:132962   2412000000:145619                             
+##  00:14:bf:3b:c7:c6:126529   2432000000:126529                             
+##  00:14:bf:b1:97:90:122315   2427000000:122315                             
+##  00:14:bf:b1:97:8d:121325   2442000000:121325                             
+##  (Other)          :183831   (Other)   :120757</code></pre>
+<p>After examining these summaries, we find a couple of anomalies:</p>
+<ul>
+<li>There is only one value for <code>scan_mac</code>, the MAC address for the hand-held device from which the measurements were taken. We might as well discard this variable from our data frame. However, we may want to note this value to compare it with the online data.</li>
+<li>All of the values for <code>posZ</code>, the elevation of the hand-held device, are 0. This is because all of the measurements were taken on one floor of the building. We can eliminate this variable also.</li>
+</ul>
+<p>We modify our data frame accordingly,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>posZ, <span class="op">-</span>scan_mac)</code></pre></div>
+<div id="exploring-orientation" class="section level2">
+<h2><span class="header-section-number">3.1</span> Exploring Orientation</h2>
+<p>According to the documentation, we should have only 8 values for orientation, i.e., 0, 45, 90, …, 315. We can check this with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">length</span>(<span class="kw">unique</span>(offline<span class="op">$</span>orientation))</code></pre></div>
+<pre><code>## [1] 203</code></pre>
+<p>Clearly, this is not the case. Let’s examine the distribution of orientation:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">e &lt;-<span class="st"> </span><span class="kw">ecdf</span>(offline<span class="op">$</span>orientation)
+<span class="kw">data_frame</span>(<span class="dt">orientation =</span> offline<span class="op">$</span>orientation,
+           <span class="dt">CDF =</span> <span class="kw">e</span>(orientation)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(orientation, CDF)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="fl">0.4</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_line</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">1</span>, <span class="dt">color =</span> <span class="st">&#39;grey&#39;</span>, <span class="dt">linetype =</span> <span class="st">&#39;dashed&#39;</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">360</span>, <span class="dt">by =</span> <span class="dv">45</span>))</code></pre></div>
+<div class="figure"><span id="fig:ecdf"></span>
+<p class="caption marginnote shownote">
+Figure 3.1: Empirical CDF of Orientation for the Hand-Held Device. This empirical distribution function of orientation shows that there are 8 basic orientations that are 45 degrees apart. We see from the steps in the function that these orientations are not exactly 45, 90, 135, etc. Also, the 0 orientation is split into the two groups, one near 0 and the other near 360.
+</p>
+<img src="_main_files/figure-html/ecdf-1.png" alt="Empirical CDF of Orientation for the Hand-Held Device. This empirical distribution function of orientation shows that there are 8 basic orientations that are 45 degrees apart. We see from the steps in the function that these orientations are not exactly 45, 90, 135, etc. Also, the 0 orientation is split into the two groups, one near 0 and the other near 360." width="672"  />
+</div>
+<p>An annotated version of this plot appears in Figure <a href="cleaning-the-data-and-building-a-representation-for-analysis.html#fig:ecdf">3.1</a>. It shows the orientation values are distributed in clusters around the expected angles. Note the values near 0 and near 360 refer to the same direction. That is, an orientation value 1 degree before 0 is reported as 359 and 1 degree past 0 is a 1.</p>
+<p>Although the experiment was designed to measure signal strength at 8 orientations – 45 degree intervals from 0 to 315 – these orientations are not exact. However, it may be useful in our analysis to work with values corresponding to the 8 equi-spaced angles. That is, we want to map 47.5 to 45, and 358.2 to 0, and so on. To do this, we take each value and find out to which of the 8 orientations it is closest and we return that orientation. We must handle values such as 358.2 carefully as we want to map them to 0, not to the closer 315. The following makes this conversion:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">angle =</span> <span class="kw">cut</span>(offline<span class="op">$</span>orientation,
+                     <span class="dt">breaks =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">405</span>, <span class="dt">by =</span> <span class="dv">45</span>) <span class="op">-</span><span class="st"> </span><span class="dv">45</span><span class="op">/</span><span class="dv">2</span>,
+                     <span class="dt">labels =</span> <span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">360</span>, <span class="dt">by =</span> <span class="dv">45</span>))) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">angle =</span> <span class="kw">factor</span>(<span class="kw">c</span>(<span class="kw">seq</span>(<span class="dv">0</span>, <span class="dv">315</span>, <span class="dt">by =</span> <span class="dv">45</span>), <span class="dv">0</span>)[<span class="kw">as.numeric</span>(angle)]))</code></pre></div>
+<p>We check that the results are as we expect with boxplots:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(offline, <span class="kw">aes</span>(angle, orientation)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_boxplot</span>()</code></pre></div>
+<div class="figure"><span id="fig:orientation"></span>
+<p class="caption marginnote shownote">
+Figure 3.2: Boxplots of Orientation for the Hand-Held Device. These boxplots of the original orientation against the rounded value confirm that the values have mapped correctly to 0, 45, 90, 135, etc. The “outliers” at the top left corner of the plot are the values near 360 that have been mapped to 0.
+</p>
+<img src="_main_files/figure-html/orientation-1.png" alt="Boxplots of Orientation for the Hand-Held Device. These boxplots of the original orientation against the rounded value confirm that the values have mapped correctly to 0, 45, 90, 135, etc. The “outliers” at the top left corner of the plot are the values near 360 that have been mapped to 0." width="672"  />
+</div>
+<p>From Figure <a href="cleaning-the-data-and-building-a-representation-for-analysis.html#fig:orientation">3.2</a> we see that the new values look correct and the original values near 360 degrees are mapped to 0. It also shows the variability in the act of measuring.</p>
+</div>
+<div id="exploring-mac-addresses" class="section level2">
+<h2><span class="header-section-number">3.2</span> Exploring MAC Addresses</h2>
+<p>From the <code>summary()</code> information, it seems that there may be a one-to-one mapping between the MAC address of the access points and channel. For example, the summary statistics show there are 126,529 occurrences of the address <code>00:14:bf:3b:c7:c6</code> and the same number of occurrences of channel <code>2432000000</code>. To help us ascertain if we do have a one-to-one mapping, we look at the relationship between the MAC address and channel.</p>
+<p>How many unique addresses and channels do we have? There should be the same number, if there is a one-to-one mapping. We find:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">c</span>(<span class="kw">length</span>(<span class="kw">unique</span>(offline<span class="op">$</span>mac)), <span class="kw">length</span>(<span class="kw">unique</span>(offline<span class="op">$</span>channel)))</code></pre></div>
+<pre><code>## [1] 12  8</code></pre>
+<p>There are 12 MAC addresses and 8 channels. We were given the impression from the building plan (see Figure <a href="the-raw-data.html#fig:floorplan">2.1</a>) that there are only 6 access points. Why are there 8 channels and 12 MAC addresses? Rereading the documentation we find that there are additional access points that are not part of the testing area and so not seen on the floor plan. Let’s check the counts of observations for the various MAC addresses with <code>table()</code>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">table</span>(offline<span class="op">$</span>mac)</code></pre></div>
+<pre><code>## 
+## 00:04:0e:5c:23:fc 00:0f:a3:39:dd:cd 00:0f:a3:39:e0:4b 00:0f:a3:39:e1:c0 
+##               418            145619             43508            145862 
+## 00:0f:a3:39:e2:10 00:14:bf:3b:c7:c6 00:14:bf:b1:97:81 00:14:bf:b1:97:8a 
+##             19162            126529            120339            132962 
+## 00:14:bf:b1:97:8d 00:14:bf:b1:97:90 00:30:bd:f8:7f:c5 00:e0:63:82:8b:a9 
+##            121325            122315               301               103</code></pre>
+<p>Clearly the first and the last two MAC addresses are not near the testing area or were only working/active for a short time during the measurement process because their counts are very low. It’s probably also the case that the third and fifth addresses are not among the access points displayed on the map because they have much lower counts than the others and these are far lower than the possible 146,080 recordings (recall that there are potentially signals recorded at 166 grid points, 8 orientations, and 110 replications).</p>
+<div class="figure"><span id="fig:coffer"></span>
+<p class="caption marginnote shownote">
+Figure 3.3: Screenshot of the coffer.com Mac Address Lookup Form. The coffer.com website offers lookup services to find the MAC address for a vendor and vice versa.
+</p>
+<img src="coffer.png" alt="Screenshot of the coffer.com Mac Address Lookup Form. The coffer.com website offers lookup services to find the MAC address for a vendor and vice versa." width="640"  />
+</div>
+<p>According to the documentation, the access points consist of 5 Linksys/Cisco and one Lancom L-54g routers. We look up these MAC addresses at the <a href="">http://coffer.com/mac_find/</a> site to find the vendor addresses that begin with <code>00:14:bf</code> belong to Linksys devices, those beginning with <code>00:0f:a3</code> belong to Alpha Networks, and Lancom devices start with <code>00:a0:57</code> (see Figure <a href="cleaning-the-data-and-building-a-representation-for-analysis.html#fig:coffer">3.3</a>). We do have 5 devices with an address that begins <code>00:14:bf</code>, which matches with the Linksys count from the documentation. However, none of our MAC addresses begin with <code>00:a0:57</code> so there is a discrepancy with the documentation. Nonetheless, we have discovered valuable information for piecing together a better understanding of the data. For now, let’s keep the records from the top 7 devices. We do this with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">top_macs &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">count</span>(mac) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">top_n</span>(<span class="dv">7</span>, n) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">arrange</span>(<span class="kw">desc</span>(n)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>.<span class="op">$</span>mac
+offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(mac <span class="op">%in%</span><span class="st"> </span>top_macs)</code></pre></div>
+<p>Finally, we create a table of counts for the remaining MAC×channel combinations and confirm there is one non-zero entry in each row.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">mac_channel &lt;-<span class="st"> </span><span class="kw">table</span>(offline<span class="op">$</span>mac, offline<span class="op">$</span>channel)
+<span class="kw">apply</span>(mac_channel, <span class="dv">1</span>, <span class="cf">function</span>(x) <span class="kw">sum</span>(x <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>))</code></pre></div>
+<pre><code>## 00:0f:a3:39:dd:cd 00:0f:a3:39:e1:c0 00:14:bf:3b:c7:c6 00:14:bf:b1:97:81 
+##                 1                 1                 1                 1 
+## 00:14:bf:b1:97:8a 00:14:bf:b1:97:8d 00:14:bf:b1:97:90 
+##                 1                 1                 1</code></pre>
+<p>Indeed we see that there is a one-to-one correspondence between MAC address and channel for these 7 devices. This means we can eliminate <code>channel</code> from <code>offline</code>, i.e.,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(<span class="op">-</span>channel)</code></pre></div>
+</div>
+<div id="exploring-the-position-of-the-hand-held-device" class="section level2">
+<h2><span class="header-section-number">3.3</span> Exploring the Position of the Hand-Held Device</h2>
+<p>Lastly, we consider the position variables, <code>posX</code> and <code>posY</code>. For how many different locations do we have data?</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">loc_counts &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">tally</span>()</code></pre></div>
+<p>We have 166 different locations with roughly 5,500 recordings at each position. This is in accord with 8 orientations × 110 replications × 7 access points, which is 6,160 signal strength measurements.</p>
+<p>We can visualize all 166 counts by adding tiles at each location and coloring them according to the counts. We see in Figure <a href="cleaning-the-data-and-building-a-representation-for-analysis.html#fig:loc-counts">3.4</a> that there are roughly the same number of signals detected at each location.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(loc_counts, <span class="kw">aes</span>(posX, posY, <span class="dt">fill =</span> n)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_tile</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_fill_distiller</span>(<span class="dt">palette =</span> <span class="st">&#39;Reds&#39;</span>)</code></pre></div>
+<div class="figure"><span id="fig:loc-counts"></span>
+<p class="caption marginnote shownote">
+Figure 3.4: Counts of signals detected at each position. Plotted at each location in the building is the total number of signals detected from all access points for the offline data. Ideally for each location, 110 signals were measured at 8 angles for each of 6 access points, for a total of 5280 recordings. These data include a seventh Mac address and not all signals were detected, so there are about 5500 recordings at each location.
+</p>
+<img src="_main_files/figure-html/loc-counts-1.png" alt="Counts of signals detected at each position. Plotted at each location in the building is the total number of signals detected from all access points for the offline data. Ideally for each location, 110 signals were measured at 8 angles for each of 6 access points, for a total of 5280 recordings. These data include a seventh Mac address and not all signals were detected, so there are about 5500 recordings at each location." width="672"  />
+</div>
+</div>
+<div id="creating-a-function-to-prepare-the-data" class="section level2">
+<h2><span class="header-section-number">3.4</span> Creating a Function to Prepare the Data</h2>
+<p>We have examined all the variables except <code>time</code> and <code>signal</code>. This process has helped us clean our data and reduce it to those records that are relevant to our analysis. We leave the examination of the signals to the next section where we study its distributional properties. As for <code>time</code>, while this variable is not directly related to our model, it indicates the order in which the observations were taken. In an experiment, this can be helpful in uncovering potential sources of bias. For example, the person carrying the hand-held device may have changed how the device was carried as the experiment progressed and this change may lead to a change in the strength of the signal. Plots and analyses of the relationship between time and other variables can help us uncover such potential problems. We leave this investigation as an exercise.</p>
+<p>Since we also want to read the online data in R, we turn all of these commands into a function called <code>read_data()</code>. Additionally, if we later change our mind as to how we want to handle some of these special cases, e.g., to keep <code>channel</code> or <code>posZ</code>, then we can make a simple update to our function and rerun it. We might even add a parameter to the function definition to allow us to process the data in different ways. We leave it as an exercise to create <code>read_data()</code>.</p>
+
+</div>
+</div>
+<p style="text-align: center;">
+<a href="the-raw-data.html"><button class="btn btn-default">Previous</button></a>
+<a href="signal-strength-analysis.html"><button class="btn btn-default">Next</button></a>
+</p>
+</div>
+</div>
+
+
+
+</body>
+</html>

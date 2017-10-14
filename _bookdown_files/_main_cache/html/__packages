@@ -1,0 +1,17 @@
+base
+tufte
+ggplot2
+tidyverse
+tibble
+tidyr
+readr
+purrr
+dplyr
+stringr
+forcats
+ggthemes
+bindrcpp
+dotCall64
+spam
+maps
+fields

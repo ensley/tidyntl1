@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Predicting Location via Indoor Positioning Systems" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="author" content="John Ensley" />
+
+<meta name="date" content="2017-10-13" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+
+<meta name="description" content="Predicting Location via Indoor Positioning Systems">
+
+<title>Predicting Location via Indoor Positioning Systems</title>
+
+<link href="libs/tufte-css/tufte.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+
+</head>
+
+<body>
+
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="index.html#preface">Preface</a></li>
+<li><a href="introduction.html#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="rawdata.html#rawdata"><span class="toc-section-number">2</span> The Raw Data</a></li>
+<li><a href="cleandata.html#cleandata"><span class="toc-section-number">3</span> Cleaning the Data and Building a Representation for Analysis</a></li>
+<li><a href="signal-strength-analysis.html#signal-strength-analysis"><span class="toc-section-number">4</span> Signal Strength Analysis</a></li>
+<li><a href="nearest-neighbor-methods-to-predict-location.html#nearest-neighbor-methods-to-predict-location"><span class="toc-section-number">5</span> Nearest Neighbor Methods to Predict Location</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="nearest-neighbor-methods-to-predict-location" class="section level1">
+<h1><span class="header-section-number">5</span> Nearest Neighbor Methods to Predict Location</h1>
+<p>There are numerous different statistical techniques we can use to estimate the location of a device from the strength of the signal detected between the device and several access points. Here, we use a relatively simple and intuitive approach, called <span class="math inline">\(k\)</span>-nearest neighbors or <span class="math inline">\(k\)</span>-NN for short. The idea behind the nearest neighbor method (for <span class="math inline">\(k = 1\)</span>) is as follows: we have training data where the signal is measured to several access points from known positions throughout a building; when we get a new observation, i.e., a new set of signal strengths for an unknown location, we find the observation in our training data that is closest to this new observation. By close we mean the signals recorded between the access points and the new, unobserved location are close to the signal strengths measured between the access points and an observation in the training data. Then, we simply predict the position of the new observation as the position of that closest training observation. For <span class="math inline">\(k\)</span>-nearest neighbors where <span class="math inline">\(k\)</span> is larger than 1, we find the <span class="math inline">\(k\)</span> closest training points (in the signal strength domain) and estimate the new observation’s position by an aggregate of the positions of the <span class="math inline">\(k\)</span> training points.</p>
+<p>We naturally think of measuring the distance between two sets of signal strengths with Euclidean distance, i.e.,</p>
+<p><span class="math display">\[
+\sqrt{(S_1^* - S_1)^2 + \cdots + (S_6^* - S_6)^2},
+\]</span></p>
+<p>where <span class="math inline">\(S_i\)</span> is the signal strength measured between the handheld device and the <span class="math inline">\(i\)</span>-th access point for a training observation taken at some specified location, and <span class="math inline">\(S_i^∗\)</span> is the signal measured between the same access point and our new point whose <span class="math inline">\((x,y)\)</span> values we are trying to predict.</p>
+<div id="preparedata" class="section level2">
+<h2><span class="header-section-number">5.1</span> Preparing the test data</h2>
+<p>The online data are in <code>online.final.trace.txt</code>, and these observations form our test data. We use the <code>read_data()</code> function from Chapter <a href="cleandata.html#cleandata">3</a> to process the raw data with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">macs &lt;-<span class="st"> </span><span class="kw">unique</span>(offline_summary<span class="op">$</span>mac)
+online &lt;-<span class="st"> </span><span class="kw">read_data</span>(<span class="st">&#39;online.final.trace.txt&#39;</span>, <span class="dt">subMacs =</span> macs)</code></pre></div>
+<p>We have the locations where these test measurements were taken so that we can assess the accuracy of our predictions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">identical</span>(online <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">count</span>(posX, posY, angle) <span class="op">%&gt;%</span><span class="st"> </span>.<span class="op">$</span>n,
+          online <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">count</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>.<span class="op">$</span>n)</code></pre></div>
+<pre><code>## [1] TRUE</code></pre>
+<p>This output indicates that signal strengths were recorded at one orientation for each location.</p>
+<p>Given that we are computing distances between vectors of 6 signal strengths, it may be helpful to organize the data in a different structure than we have used so far in this chapter. Specifically, rather than a data frame with one column of signal strengths from all access points, let’s organize the data so that we have 6 columns of signal strengths, i.e., one for each of the access points. We summarize the online data into this format, providing the average signal strength at each location as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">online_summary &lt;-<span class="st"> </span>online <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY, angle, mac) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">avg_ss =</span> <span class="kw">mean</span>(signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">spread</span>(mac, avg_ss) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ungroup</span>()</code></pre></div>
+<p>We have kept in the data frame only those variables that we use for making and assessing predictions. This new data frame should have 60 rows and 9 variables, including 6 average signal strengths at the corresponding MAC addresses. We confirm this with:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">dim</span>(online_summary)</code></pre></div>
+<pre><code>## [1] 62 10</code></pre>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">names</span>(online_summary)</code></pre></div>
+<pre><code>##  [1] &quot;posX&quot;              &quot;posY&quot;              &quot;angle&quot;            
+##  [4] &quot;orientation&quot;       &quot;00:0f:a3:39:e1:c0&quot; &quot;00:14:bf:3b:c7:c6&quot;
+##  [7] &quot;00:14:bf:b1:97:81&quot; &quot;00:14:bf:b1:97:8a&quot; &quot;00:14:bf:b1:97:8d&quot;
+## [10] &quot;00:14:bf:b1:97:90&quot;</code></pre>
+<p>To ensure the data is in a consistent format, we extract these steps into a function:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prepare_data &lt;-<span class="st"> </span><span class="cf">function</span>(data) {
+  data <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(posX, posY, angle, mac) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">avg_ss =</span> <span class="kw">mean</span>(signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">spread</span>(mac, avg_ss) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">ungroup</span>()
+}</code></pre></div>
+<p>And we use it on both the offline and online data.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline &lt;-<span class="st"> </span>offline <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(mac <span class="op">!=</span><span class="st"> </span>top_macs[<span class="dv">2</span>])
+train &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(offline)
+test &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(online)</code></pre></div>
+</div>
+<div id="choice-of-orientation" class="section level2">
+<h2><span class="header-section-number">5.2</span> Choice of Orientation</h2>
+<p>In our nearest neighbor model, we want to find records in our offline data, i.e., our training set, that have similar orientations to our new observation because we saw in Chapter <a href="cleandata.html#cleandata">3</a> that orientation can impact the strength of the signal. To do this, we might consider using all records with an orientation that is within a specified range of the new point’s orientation. Since the observations were recorded in 45 degree increments, we can simply specify the number of neighboring angles to include from the training data. For example, if we want only one orientation then we only include training data with angles that match the rounded orientation value of the new observation. If we want two orientations then we pick those two multiples of 45 degrees that flank the new observation’s orientation; for three, we choose the closest 45 degree increment and one on either side of it, and so on. That is, for <code>m</code> the number of angles and <code>angleNewObs</code> the angle of the new observation, we find the angles to include from our training data as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">new_angle &lt;-<span class="st"> </span><span class="dv">130</span>
+m &lt;-<span class="st"> </span><span class="dv">3</span>
+
+refs &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>, <span class="dt">by =</span> <span class="dv">45</span>, <span class="dt">length =</span> <span class="dv">8</span>)
+nearest_angle &lt;-<span class="st"> </span><span class="kw">round_orientation</span>(new_angle)
+<span class="cf">if</span> (m <span class="op">%%</span><span class="st"> </span><span class="dv">2</span>) {
+  angles &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="op">-</span><span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">-</span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>, <span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">-</span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>, <span class="dt">length =</span> m)
+} <span class="cf">else</span> {
+  angles &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="op">-</span><span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">/</span><span class="dv">2</span> <span class="op">-</span><span class="st"> </span><span class="dv">1</span>), <span class="dv">45</span> <span class="op">*</span><span class="st"> </span>m<span class="op">/</span><span class="dv">2</span>, <span class="dt">length =</span> m)
+}</code></pre></div>
+<p>Notice that we handle the case of <code>m</code> odd and even separately. Also, we must map the angles to values in <code>refs</code>, e.g., -45 maps to 315 and 405 maps to 45, so we adjust <code>angles</code> with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">angles &lt;-<span class="st"> </span>(angles <span class="op">+</span><span class="st"> </span>nearest_angle) <span class="op">%%</span><span class="st"> </span><span class="dv">360</span></code></pre></div>
+<p>After we have the subset of the desired angles, we select the observations from <code>offline_summary</code> to analyze with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline_subset &lt;-<span class="st"> </span>offline_summary <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(angle <span class="op">%in%</span><span class="st"> </span>angles)</code></pre></div>
+<p>Then we aggregate the signal strengths from these angles and create a data structure that is similar to that of <code>online_summary</code>. Rather than repeat the code again, we turn these computations into a helper function, which we call <code>select_train()</code>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">select_train &lt;-<span class="st"> </span><span class="cf">function</span>(new_angle, data, m) {
+  refs &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>, <span class="dt">by =</span> <span class="dv">45</span>, <span class="dt">length =</span> <span class="dv">8</span>)
+  nearest_angle &lt;-<span class="st"> </span><span class="kw">round_orientation</span>(new_angle)
+  
+  <span class="cf">if</span> (m <span class="op">%%</span><span class="st"> </span><span class="dv">2</span>) {
+    angles &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="op">-</span><span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">-</span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>, <span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">-</span><span class="dv">1</span>)<span class="op">/</span><span class="dv">2</span>, <span class="dt">length =</span> m)
+  } <span class="cf">else</span> {
+    angles &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="op">-</span><span class="dv">45</span> <span class="op">*</span><span class="st"> </span>(m<span class="op">/</span><span class="dv">2</span> <span class="op">-</span><span class="st"> </span><span class="dv">1</span>), <span class="dv">45</span> <span class="op">*</span><span class="st"> </span>m<span class="op">/</span><span class="dv">2</span>, <span class="dt">length =</span> m)
+  }
+  angles &lt;-<span class="st"> </span>(angles <span class="op">+</span><span class="st"> </span>nearest_angle) <span class="op">%%</span><span class="st"> </span><span class="dv">360</span>
+  
+  data <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">filter</span>(angle <span class="op">%in%</span><span class="st"> </span>angles) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">ungroup</span>()
+}</code></pre></div>
+<p>This function has 3 parameters: <code>angleNewObs</code>, the angle of the new observation; <code>signals</code>, the training data, i.e., data in the format of <code>offline_summary</code>; and <code>m</code>, the number of angles to include from <code>signals</code>. The function returns a data frame that matches <code>offline_subset</code> from above.</p>
+<p>We can test our function for an angle of 130 degrees and <code>m</code> of 3, i.e., we aggregate the offline data for angles of 90, 135, and 180. We do this with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">train130 &lt;-<span class="st"> </span><span class="kw">select_train</span>(<span class="dv">130</span>, train, <span class="dt">m =</span> <span class="dv">3</span>)</code></pre></div>
+<p>The results, slightly reformatted for readability, are:</p>
+<pre><code>## # A tibble: 498 x 9
+##     posX  posY  angle `:c0` `:c6` `:81` `:8a` `:8d` `:90`
+##    &lt;dbl&gt; &lt;dbl&gt; &lt;fctr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+##  1     0     0     90   -51   -63   -64   -34   -63   -55
+##  2     0     0    135   -52   -67   -63   -39   -64   -54
+##  3     0     0    180   -55   -68   -62   -34   -66   -56
+##  4     0     1     90   -55   -66   -64   -40   -64   -60
+##  5     0     1    135   -54   -66   -64   -41   -65   -58
+##  6     0     1    180   -50   -64   -63   -37   -68   -59
+##  7     0     2     90   -54   -61   -61   -46   -58   -51
+##  8     0     2    135   -56   -62   -65   -39   -61   -50
+##  9     0     2    180   -54   -60   -61   -48   -61   -57
+## 10     0     3     90   -58   -61   -56   -41   -65   -51
+## # ... with 488 more rows</code></pre>
+<p>The <code>select_train()</code> function returns a set of <span class="math inline">\(m\)</span>×166 signals for each access point.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">nrow</span>(train130) <span class="op">/</span><span class="st"> </span>m</code></pre></div>
+<pre><code>## [1] 166</code></pre>
+</div>
+<div id="finding-the-nearest-neighbors" class="section level2">
+<h2><span class="header-section-number">5.3</span> Finding the Nearest Neighbors</h2>
+<p>At this point, we have a set of training data that we can use to predict the location of our new point. We want to look at the distance in terms of signal strengths from these training data to the new point. Whether we want the nearest neighbor or the 3 nearest neighbors, we need to calculate the distance from the new point to all observations in the training set. We can do this with the <code>closest_pts()</code> function:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">closest_pts &lt;-<span class="st"> </span><span class="cf">function</span>(train, testvec, k) {
+  train <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">gather</span>(mac, signal, <span class="op">-</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">diff =</span> signal <span class="op">-</span><span class="st"> </span>testvec) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">dist =</span> <span class="kw">sum</span>(diff<span class="op">*</span>diff)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">arrange</span>(dist) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">head</span>(k) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="co"># select(posX, posY) %&gt;% </span>
+<span class="st">    </span><span class="kw">ungroup</span>()
+}</code></pre></div>
+<p>The parameters to this function are the training data and a numeric vector of 6 new signal strengths. Our function returns a data frame containing the locations of the <span class="math inline">\(k\)</span> nearest training observations in order of closeness to the new observation’s signal strength, as well as the value of that distance.</p>
+<p>We can use some subset of these ordered locations to estimate the location of the new observation. That is, for some value <span class="math inline">\(k\)</span> of nearest neighbors, we can simply average the first <span class="math inline">\(k\)</span> locations. For example, if <code>neighbors</code> contains the <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> values returned from <code>closest_pts()</code> (these are the ordered training locations), then we estimate the location of the new observation with the function <code>avg_neighbors()</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">avg_neighbors &lt;-<span class="st"> </span><span class="cf">function</span>(neighbors) {
+  neighbors <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">summarise_at</span>(<span class="kw">vars</span>(posX<span class="op">:</span>posY), mean)
+}</code></pre></div>
+<p>Of course, we need not take simple averages. For example, we can use weights in the average that are inversely proportional to the distance (in signal strength) from the test observation. In this case, we also need to return the distance values from the <code>closest_pts()</code> function. This alternative approach allows us to include the <span class="math inline">\(k\)</span> points that are close, but to differentiate between them by how close they actually are from the new observation’s signals. The weights might be</p>
+<p><span class="math display">\[
+\frac{1/d_i}{\sum^k_{i=1} 1/d_i},
+\]</span></p>
+<p>for the <span class="math inline">\(i\)</span>-th closest neighboring observation where <span class="math inline">\(d_i\)</span> is the distance from our new point to that nearest reference point (in signal strength space). This might look something like the function <code>weighted_avg_neighbors()</code>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">weighted_avg_neighbors &lt;-<span class="st"> </span><span class="cf">function</span>(neighbors) {
+  neighbors <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">wtdX =</span> posX <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">/</span>dist) <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(<span class="dv">1</span><span class="op">/</span>dist),
+           <span class="dt">wtdY =</span> posY <span class="op">*</span><span class="st"> </span>(<span class="dv">1</span><span class="op">/</span>dist) <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(<span class="dv">1</span><span class="op">/</span>dist)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">posX =</span> <span class="kw">sum</span>(wtdX), <span class="dt">posY =</span> <span class="kw">sum</span>(wtdY))
+}</code></pre></div>
+<p>We may also want to consider different metrics. We have used Euclidean distance, but we may want to try Manhattan distance. We might also be inclined to use medians and not averages when combining neighbors to predict <span class="math inline">\((x,y)\)</span>, if the distribution of the values we are averaging are quite skewed.</p>
+<p>We have developed two functions, <code>train_select()</code> and <code>closest_pts()</code>, to provide the locations in the training data that have signal strengths close to those of a test observation. We can formalize this approach to make predictions for all of our test data. We do this with <code>my_knn()</code> as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">my_knn &lt;-<span class="st"> </span><span class="cf">function</span>(train, test, <span class="dt">m =</span> <span class="dv">1</span>, <span class="dt">k =</span> <span class="dv">3</span>) {
+  pred_xy &lt;-<span class="st"> </span><span class="kw">list</span>()
+  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span><span class="kw">nrow</span>(test)) {
+    testvec &lt;-<span class="st"> </span>test[i, ] <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">select</span>(<span class="kw">starts_with</span>(<span class="st">&#39;00:&#39;</span>)) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">unlist</span>()
+    train_ss &lt;-<span class="st"> </span><span class="kw">select_train</span>(<span class="kw">as.numeric</span>(<span class="kw">as.character</span>(test<span class="op">$</span>angle[i])), train, m) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span>
+<span class="st">      </span><span class="kw">summarise_at</span>(<span class="op">-</span><span class="dv">1</span>, mean)
+    neighbors &lt;-<span class="st"> </span><span class="kw">closest_pts</span>(train_ss, testvec, k)
+    pred_xy[[i]] &lt;-<span class="st"> </span><span class="kw">weighted_avg_neighbors</span>(neighbors)
+  }
+  <span class="kw">bind_rows</span>(pred_xy)
+}</code></pre></div>
+<p>We test our functions with the case of 3 nearest neighbors and 3 orientations with:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">est_xy_k3 &lt;-<span class="st"> </span><span class="kw">my_knn</span>(train, test, <span class="dt">m =</span> <span class="dv">3</span>, <span class="dt">k =</span> <span class="dv">3</span>)</code></pre></div>
+<p>To assess the fit of the model we can make a map of the actual and predicted locations. Figure <a href="nearest-neighbor-methods-to-predict-location.html#fig:predictions">5.1</a> shows such a map for this model and the 1-NN model. Notice that in general the errors are smaller for 3-NN. Also in the 3-NN model, the large errors seem less problematic as they tend to follow the hallways.</p>
+<div class="figure"><span id="fig:predictions"></span>
+<p class="caption marginnote shownote">
+Figure 5.1: Floor Plan with Predicted and Actual Locations. The red line segments shown in the floor plan connect the test locations (black dots) to their predicted locations (asterisks). The top plot shows the predictions for <span class="math inline">\(k = 1\)</span> and the bottom plot is for <span class="math inline">\(k = 3\)</span> nearest neighbors. In this model, we use as training data the average signal strengths from each of the 166 offline locations (grey dots) to the 6 access points (black squares) for the 3 closest angles to the angle at which the test data was measured.
+</p>
+<img src="_main_files/figure-html/predictions-1.png" alt="Floor Plan with Predicted and Actual Locations. The red line segments shown in the floor plan connect the test locations (black dots) to their predicted locations (asterisks). The top plot shows the predictions for $k = 1$ and the bottom plot is for $k = 3$ nearest neighbors. In this model, we use as training data the average signal strengths from each of the 166 offline locations (grey dots) to the 6 access points (black squares) for the 3 closest angles to the angle at which the test data was measured." width="672"  /><img src="_main_files/figure-html/predictions-2.png" alt="Floor Plan with Predicted and Actual Locations. The red line segments shown in the floor plan connect the test locations (black dots) to their predicted locations (asterisks). The top plot shows the predictions for $k = 1$ and the bottom plot is for $k = 3$ nearest neighbors. In this model, we use as training data the average signal strengths from each of the 166 offline locations (grey dots) to the 6 access points (black squares) for the 3 closest angles to the angle at which the test data was measured." width="672"  />
+</div>
+<p>In addition to the visual comparison of the predicted and actual positions, we can compare these fits numerically. For example, we can compute the length of the line segments in each of the figures and sum them to yield a measure of the size of the error. Or, we can find the sum of squared errors with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">calc_error &lt;-<span class="st"> </span><span class="cf">function</span>(estXY, actualXY) {
+  <span class="kw">sum</span>(<span class="kw">rowSums</span>((estXY <span class="op">-</span><span class="st"> </span>actualXY)<span class="op">^</span><span class="dv">2</span>))
+}</code></pre></div>
+<p>We apply this function to our two sets of errors to find:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">actualXY &lt;-<span class="st"> </span>test <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(posX, posY)
+<span class="kw">map_dbl</span>(<span class="kw">list</span>(est_xy_k1, est_xy_k3), calc_error, actualXY)</code></pre></div>
+<pre><code>## [1] 622.8803 315.9173</code></pre>
+<p>This confirms what we saw in the figures, that 3 nearest neighbors do a better job of predicting location than one nearest neighbor. The question remains whether some other value of <span class="math inline">\(k\)</span> makes a better predictor.</p>
+</div>
+<div id="cross-validation-and-choice-of-k" class="section level2">
+<h2><span class="header-section-number">5.4</span> Cross-Validation and Choice of <span class="math inline">\(k\)</span></h2>
+<p>The choice of <span class="math inline">\(k\)</span>, the number of neighbors to include in the estimate of a new observation’s position, is a model selection problem. Ideally, we want to choose the value of <span class="math inline">\(k\)</span> independent of our test data so that we do not overfit our model to the training data. The method of <span class="math inline">\(v\)</span>-fold cross-validation can help us do this. The idea behind it is quite simple: we divide our training data into <span class="math inline">\(v\)</span> non-overlapping subsets of equal size. Then for each subset, we build models with the data that are not in that subset and we assess the predictive ability of the model using the subset that was left out. We repeat this model fitting and assessment for each of the <span class="math inline">\(v\)</span> folds and aggregate the prediction errors across the folds.</p>
+<p>In our nearest neighbor scenario, we use all 8 orientations and 6 MAC addresses with each location. This means that we cross-validate on the 166 locations. Suppose that we take <span class="math inline">\(v = 11\)</span>; then each fold has <code>floor(166/v)</code>, or 15, locations. We can randomly select these locations with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">v &lt;-<span class="st"> </span><span class="dv">11</span>
+permute_locs &lt;-<span class="st"> </span>train <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">unique</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">nrow</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">sample</span>()
+permute_locs &lt;-<span class="st"> </span><span class="kw">matrix</span>(permute_locs, <span class="dt">ncol =</span> v, <span class="dt">nrow =</span> <span class="kw">floor</span>(<span class="kw">length</span>(permute_locs) <span class="op">/</span><span class="st"> </span>v))</code></pre></div>
+<pre><code>## Warning in matrix(permute_locs, ncol = v, nrow =
+## floor(length(permute_locs)/v)): data length [166] is not a sub-multiple or
+## multiple of the number of rows [15]</code></pre>
+<p>We receive a warning message with the call to <code>matrix()</code> because <span class="math inline">\(v\)</span> does not divide evenly into 166, so <code>permute_locs</code> does not contain all 166 locations. Each subset of 15 locations is used as the “online” or test data so, e.g., the first online fold is</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">online_fold &lt;-<span class="st"> </span>train[permute_locs[ ,<span class="dv">1</span>], ]</code></pre></div>
+<p>We need to summarize these data so that the data structure matches that of <code>online_summary</code>. This includes selecting an orientation at random because each test observation has only one orientation. (Of course, we could find the nearest neighbors for each of the 8 orientations, but we keep things a bit simpler).</p>
+<p>Recall from Section <a href="nearest-neighbor-methods-to-predict-location.html#preparedata">5.1</a> that we summarized the online data into a structure that had 6 columns of signal strength values, one for each access point. It is easier for us to create the test data in its entirety from <code>offline</code> and then divide this data structure into its folds. We can use our function <code>reshape_ss()</code> to do this. However, there is one important difference – we want to select one angle at random for each location. We can augment <code>prepare_data()</code> to conditionally perform this selection, e.g.,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">prepare_data &lt;-<span class="st"> </span><span class="cf">function</span>(data, <span class="dt">sample_angle =</span> <span class="ot">FALSE</span>) {
+  df &lt;-<span class="st"> </span>data <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(posX, posY, angle, mac) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">avg_ss =</span> <span class="kw">mean</span>(signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">spread</span>(mac, avg_ss) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">ungroup</span>()
+  <span class="cf">if</span> (sample_angle) {
+    df &lt;-<span class="st"> </span>df <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">      </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">      </span><span class="kw">sample_n</span>(<span class="dv">1</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">      </span><span class="kw">ungroup</span>()
+  }
+  df
+}</code></pre></div>
+<p>After we incorporate this code into <code>prepare_data()</code> and augment the function definition to include <code>sample_angle</code> with a default value of <code>FALSE</code>, then we can summarize and format <code>offline</code> with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">test_cv &lt;-<span class="st"> </span><span class="kw">prepare_data</span>(offline, <span class="dt">sample_angle =</span> <span class="ot">TRUE</span>)</code></pre></div>
+<p>Now, our first fold is:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">online_fold &lt;-<span class="st"> </span>test_cv[permute_locs[ ,<span class="dv">1</span>], ]</code></pre></div>
+<p>This structure makes it easier to use our previous code to find the nearest neighbors. Our training data for the first fold is</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">offline_fold &lt;-<span class="st"> </span>train[permute_locs[ ,<span class="op">-</span><span class="dv">1</span>], ]</code></pre></div>
+<p>This subset is also in the correct format for our earlier application of the nearest neighbor method. That is, we can use our <code>my_knn()</code> function with these cross-validated versions of the online and offline data as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">est_fold &lt;-<span class="st"> </span><span class="kw">my_knn</span>(offline_fold, online_fold, <span class="dt">m =</span> <span class="dv">3</span>, <span class="dt">k =</span> <span class="dv">3</span>)</code></pre></div>
+<p>Then we find the error in our estimates with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">actual_fold &lt;-<span class="st"> </span>online_fold <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(posX, posY)
+<span class="kw">calc_error</span>(est_fold, actual_fold)</code></pre></div>
+<pre><code>## [1] 5278.553</code></pre>
+<p>For each fold, we want to find the <span class="math inline">\(k\)</span>-NN estimates for <span class="math inline">\(k = 1, 2, \dots, K\)</span>, for some suitably large <span class="math inline">\(K\)</span>. And, we want to aggregate the errors over the <span class="math inline">\(v\)</span> folds. We begin simply by wrapping our code from above in loops over the folds and the number of neighbors. We do this as follows, for <span class="math inline">\(K = 20\)</span>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">K &lt;-<span class="st"> </span><span class="dv">20</span>
+err &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="dv">0</span>, K)
+
+<span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>v) {
+  online_fold &lt;-<span class="st"> </span>test_cv[permute_locs[ ,j], ]
+  offline_fold &lt;-<span class="st"> </span>train[permute_locs[ ,<span class="op">-</span>j], ]
+  actual_fold &lt;-<span class="st"> </span>online_fold <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(posX, posY)
+  <span class="cf">for</span> (k <span class="cf">in</span> <span class="dv">1</span><span class="op">:</span>K) {
+    est_fold &lt;-<span class="st"> </span><span class="kw">my_knn</span>(offline_fold, online_fold, <span class="dt">m =</span> <span class="dv">3</span>, <span class="dt">k =</span> k)
+    err[k] &lt;-<span class="st"> </span>err[k] <span class="op">+</span><span class="st"> </span><span class="kw">calc_error</span>(est_fold, actual_fold)
+  }
+}</code></pre></div>
+<p>Figure <a href="#cverr"><strong>??</strong></a> shows the sum of squared errors as a function of <span class="math inline">\(k\)</span>. We see that the errors decrease quite a lot at first, e.g., for <span class="math inline">\(k = 1, \dots, 7\)</span>; then the errors begin to increase slowly because the neighbors become too spread out geographically.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">ggplot</span>(<span class="kw">data_frame</span>(<span class="dt">k =</span> <span class="dv">1</span><span class="op">:</span>K, <span class="dt">err =</span> err), <span class="kw">aes</span>(k, err)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_line</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&#39;number of neighbors&#39;</span>, <span class="dt">y =</span> <span class="st">&#39;sum of squared errors&#39;</span>)</code></pre></div>
+<div class="figure"><span id="fig:cverr"></span>
+<p class="caption marginnote shownote">
+Figure 5.2: Cross Validated Selection of <span class="math inline">\(k\)</span>. This line plot shows the sum of square errors as a function of the number of neighbors used in predicting the location of a new observation. The sums of squared errors are obtained via cross-validation of the offline data.
+</p>
+<img src="_main_files/figure-html/cverr-1.png" alt="Cross Validated Selection of $k$. This line plot shows the sum of square errors as a function of the number of neighbors used in predicting the location of a new observation. The sums of squared errors are obtained via cross-validation of the offline data." width="672"  />
+</div>
+<p>We use the value of 7 for the nearest neighbors that we obtained from cross-validation, and we apply it to our original training and test data, i.e.,</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">est_xy_k6 &lt;-<span class="st"> </span><span class="kw">my_knn</span>(train, test, <span class="dt">m =</span> <span class="dv">3</span>, <span class="dt">k =</span> <span class="dv">6</span>)</code></pre></div>
+<p>Then we tally the errors in our predictions with</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">calc_error</span>(est_xy_k6, actualXY)</code></pre></div>
+<pre><code>## [1] 261.1878</code></pre>
+<p>The earlier values for <span class="math inline">\(k = 1\)</span> and <span class="math inline">\(k = 3\)</span> were 622 and 315, respectively. The choice of <span class="math inline">\(k = 6\)</span> may not be the minimizing value for our online data because this value was chosen without reference to the online data. This is the reason we use cross-validation, i.e., we do not use the online data in both the selection of <span class="math inline">\(k\)</span> and the assessment of the predictions.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot_locations</span>(est_xy_k6)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-79-1.png" width="672"  /></p>
+
+</div>
+</div>
+<p style="text-align: center;">
+<a href="signal-strength-analysis.html"><button class="btn btn-default">Previous</button></a>
+</p>
+</div>
+</div>
+
+
+
+</body>
+</html>
