@@ -31,4 +31,4 @@ options(htmltools.dir.version = FALSE)
 
 # Preface {-}
 
-This is a case study from Chapter 1 of __Data Science in R__ [@Nolan:2015:DSR:2821191]. 
+This is a case study from Chapter 1 of _Data Science in R_ [@Nolan:2015:DSR:2821191]. Most of the words in the following chapters are not my own. My goal is to follow along with the case study, using tools from the [tidyverse](tidyverse.org) instead of the base R that is used in _Data Science in R_. That is not to say that the tidyverse is necessarily better than base R; I just prefer it for data cleaning, manipulation, and visualization. Any work done in the "Exercises" section is entirely my own.
