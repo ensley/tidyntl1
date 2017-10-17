@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta property="og:title" content="Predicting Location via Indoor Positioning Systems" />
+<meta property="og:type" content="book" />
+
+
+
+
+
+<meta name="author" content="John Ensley" />
+
+<meta name="date" content="2017-10-16" />
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  TeX: { equationNumbers: { autoNumber: "AMS" } }
+});
+</script>
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_CHTML-full" type="text/javascript"></script>
+
+<meta name="description" content="Predicting Location via Indoor Positioning Systems">
+
+<title>Predicting Location via Indoor Positioning Systems</title>
+
+<link href="libs/tufte-css/tufte.css" rel="stylesheet" />
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+</style>
+
+
+<link rel="stylesheet" href="toc.css" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div class="row">
+<div class="col-sm-12">
+<div id="TOC">
+<ul>
+<li><a href="index.html#preface">Preface</a></li>
+<li><a href="introduction.html#introduction"><span class="toc-section-number">1</span> Introduction</a></li>
+<li><a href="rawdata.html#rawdata"><span class="toc-section-number">2</span> The Raw Data</a></li>
+<li><a href="cleandata.html#cleandata"><span class="toc-section-number">3</span> Cleaning the Data and Building a Representation for Analysis</a></li>
+<li><a href="signal-strength-analysis.html#signal-strength-analysis"><span class="toc-section-number">4</span> Signal Strength Analysis</a></li>
+<li><a href="nearest-neighbor-methods-to-predict-location.html#nearest-neighbor-methods-to-predict-location"><span class="toc-section-number">5</span> Nearest Neighbor Methods to Predict Location</a></li>
+<li><a href="exercises.html#exercises"><span class="toc-section-number">6</span> Exercises</a></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="row">
+<div class="col-sm-12">
+<div id="exercises" class="section level1">
+<h1><span class="header-section-number">6</span> Exercises</h1>
+<div id="q.14" class="section level2 unnumbered">
+<h2>Q.14</h2>
+<blockquote>
+<p>The researchers who collected these data implemented a Bayesian approach to predicting location from signal strength. Their work is described in a paper that is available from <a href="http://www.informatik.uni-mannheim.de/pi4/publications/King2006g.pdf" class="uri">http://www.informatik.uni-mannheim.de/pi4/publications/King2006g.pdf</a>. Consider implementing this approach to building a statistical IPS.</p>
+</blockquote>
+<p>The data on the CRAWDAD website doesn’t entirely match up with the description of the data in the published paper, but it’s close enough to get some decent results.</p>
+<p>The authors’ model involves collecting all offline data with orientations within a certain angle <span class="math inline">\(\alpha\)</span> from the online point’s orientation. That is, an online point with orientation 30 degrees and <span class="math inline">\(\alpha = 25\)</span> would include only offline points at an orientation of 45 degrees, whereas if <span class="math inline">\(\alpha = 95\)</span>, we would include orientations 0, 45, 90, and 315 degrees from the offline data. The function to subset the offline data looks like this.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">get_summary &lt;-<span class="st"> </span><span class="cf">function</span>(offline, orientation, similarity_angle) {
+  refs &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">0</span>, <span class="dt">by =</span> <span class="dv">45</span>, <span class="dt">length =</span> <span class="dv">8</span>)
+  lower_bd &lt;-<span class="st"> </span>(orientation <span class="op">-</span><span class="st"> </span>similarity_angle) <span class="op">%%</span><span class="st"> </span><span class="dv">360</span>
+  upper_bd &lt;-<span class="st"> </span>(orientation <span class="op">+</span><span class="st"> </span>similarity_angle) <span class="op">%%</span><span class="st"> </span><span class="dv">360</span>
+  <span class="cf">if</span> ((orientation <span class="op">-</span><span class="st"> </span>similarity_angle) <span class="op">%/%</span><span class="st"> </span><span class="dv">360</span> <span class="op">==</span><span class="st"> </span><span class="dv">0</span> <span class="op">&amp;&amp;</span>
+<span class="st">      </span>(orientation <span class="op">+</span><span class="st"> </span>similarity_angle) <span class="op">%/%</span><span class="st"> </span><span class="dv">360</span> <span class="op">==</span><span class="st"> </span><span class="dv">0</span>) {
+    angles &lt;-<span class="st"> </span>refs[<span class="kw">which</span>(refs <span class="op">&gt;=</span><span class="st"> </span>lower_bd <span class="op">&amp;</span><span class="st"> </span>refs <span class="op">&lt;=</span><span class="st"> </span>upper_bd)]
+  } <span class="cf">else</span> {
+    angles &lt;-<span class="st"> </span>refs[<span class="kw">which</span>(refs <span class="op">&gt;=</span><span class="st"> </span>lower_bd <span class="op">|</span><span class="st"> </span>refs <span class="op">&lt;=</span><span class="st"> </span>upper_bd)]
+  }
+  
+  offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">filter</span>(angle <span class="op">%in%</span><span class="st"> </span>angles) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(posX, posY, mac) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">avg_signal =</span> <span class="kw">mean</span>(signal), <span class="dt">sd_signal =</span> <span class="kw">sd</span>(signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">ungroup</span>()
+}</code></pre></div>
+<p>Once it has selected the appropriate orientations, <code>get_summary()</code> calculates the mean and standard deviation signal strengths for every location and every MAC address.</p>
+<p>Next, we need to calculate the posterior probabilities for each location given the observed signal strengths. Here is the function that accomplishes this:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">find_prob &lt;-<span class="st"> </span><span class="cf">function</span>(sig, orientation, similarity_angle, train) {
+  <span class="kw">get_summary</span>(train, orientation, similarity_angle) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">left_join</span>(sig, <span class="dt">by =</span> <span class="st">&#39;mac&#39;</span>) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">g =</span> <span class="kw">pnorm</span>(obs_signal <span class="op">+</span><span class="st"> </span><span class="fl">0.5</span>, avg_signal, sd_signal) <span class="op">-</span><span class="st"> </span>
+<span class="st">             </span><span class="kw">pnorm</span>(obs_signal <span class="op">-</span><span class="st"> </span><span class="fl">0.5</span>, avg_signal, sd_signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">p =</span> <span class="kw">prod</span>(g)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">ungroup</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">mutate</span>(<span class="dt">pi =</span> (p <span class="op">/</span><span class="st"> </span><span class="kw">n</span>()),
+           <span class="dt">pi =</span> pi <span class="op">/</span><span class="st"> </span><span class="kw">sum</span>(pi)) <span class="op">%&gt;%</span>
+<span class="st">    </span><span class="kw">select</span>(<span class="op">-</span>p) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">arrange</span>(<span class="kw">desc</span>(pi))
+}</code></pre></div>
+<p>This is a little hard to follow. Here are the main steps:</p>
+<ol style="list-style-type: decimal">
+<li><code>sig</code> is a data frame with 6 rows and 2 columns. It contains the access points and the signal strength measurements taken for the online data point from each of them. For each location and each access point, calculate <code>g</code>, the probabity of measuring the signal strength value of that access point at that location. This is based on the mean and standard deviation signal strengths from the offline data, and assuming the signal strengths are normally distributed.</li>
+<li>Calculate <code>p</code>, the probability of observing the signal strengths that were observed at each reference point.</li>
+<li>Calculate <code>pi</code>, the posterior probabilities.</li>
+<li>Arrange the reference points in order of these probabilities.</li>
+</ol>
+<p>We need to apply this function to each set of measurements from every location. I’ll split the online data up using <code>tidyr::nest()</code>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">Mlist &lt;-<span class="st"> </span>online <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY, orientation, mac) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>(<span class="dt">obs_signal =</span> <span class="kw">mean</span>(signal)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">nest</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>.<span class="op">$</span>data</code></pre></div>
+<p>We’ll also need the orientations of every online point.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">orientations &lt;-<span class="st"> </span>online <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY, orientation) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span>.<span class="op">$</span>orientation</code></pre></div>
+<p>Now we’re ready to generate the results.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">map2_dfr</span>(Mlist,
+                    orientations,
+                    find_prob,
+                    <span class="dt">similarity_angle =</span> <span class="dv">70</span>,
+                    <span class="dt">train =</span> offline,
+                    <span class="dt">.id =</span> <span class="st">&#39;point&#39;</span>)
+
+results</code></pre></div>
+<pre><code>## # A tibble: 10,292 x 4
+##    point  posX  posY         pi
+##    &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;dbl&gt;
+##  1     1     0     4 0.13763012
+##  2     1     1     2 0.13749940
+##  3     1     2     4 0.09957900
+##  4     1     1     5 0.09748840
+##  5     1     0     0 0.09092198
+##  6     1     2     1 0.08466351
+##  7     1     2     2 0.06825941
+##  8     1     2     3 0.04625553
+##  9     1     0     2 0.04341196
+## 10     1     0     1 0.03877661
+## # ... with 10,282 more rows</code></pre>
+<p>Next we need to decide how many points to average together to get the location prediction. We can do this as a function of the number of points, which we’ll call <span class="math inline">\(k\)</span>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">calculate_predictions &lt;-<span class="st"> </span><span class="cf">function</span>(results, k) {
+  results <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">group_by</span>(<span class="dt">pt =</span> <span class="kw">as.numeric</span>(point)) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">top_n</span>(k, pi) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">    </span><span class="kw">summarise</span>(<span class="dt">x =</span> <span class="kw">mean</span>(posX), <span class="dt">y =</span> <span class="kw">mean</span>(posY))
+}</code></pre></div>
+<p>And we’ll write a function that will return the RMSE, or how off our predictions were on average.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">error_by_k &lt;-<span class="st"> </span><span class="cf">function</span>(k, results, actual) {
+  preds &lt;-<span class="st"> </span><span class="kw">calculate_predictions</span>(results, k) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(x, y)
+  <span class="kw">sqrt</span>(<span class="kw">calc_error</span>(preds, actual) <span class="op">/</span><span class="st"> </span><span class="kw">nrow</span>(actual))
+}</code></pre></div>
+<p>Now we can find which value of <span class="math inline">\(k\)</span> results in the smallest error.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">actual &lt;-<span class="st"> </span>online <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY, orientation) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">select</span>(posX, posY)
+errs &lt;-<span class="st"> </span><span class="kw">map_dbl</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">20</span>, error_by_k, <span class="dt">results =</span> results, <span class="dt">actual =</span> actual)
+<span class="kw">data_frame</span>(<span class="dt">k =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">20</span>, <span class="dt">err =</span> errs) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(k, err)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_line</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">breaks =</span> <span class="dv">1</span><span class="op">:</span><span class="dv">20</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-83-1.png" width="672"  /></p>
+<p>It looks like <span class="math inline">\(k=5\)</span> minimizes the error, which agrees with the paper’s findings. We can do the same thing to find the optimal value for <span class="math inline">\(\alpha\)</span>.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">alpha &lt;-<span class="st"> </span><span class="kw">seq</span>(<span class="dv">25</span>, <span class="dv">175</span>, <span class="dt">by =</span> <span class="dv">25</span>)
+err &lt;-<span class="st"> </span><span class="kw">rep</span>(<span class="ot">NA</span>, <span class="kw">length</span>(alpha))
+<span class="cf">for</span> (i <span class="cf">in</span> <span class="kw">seq_along</span>(alpha)) {
+  results &lt;-<span class="st"> </span><span class="kw">map2_dfr</span>(Mlist,
+                    orientations,
+                    find_prob,
+                    <span class="dt">similarity_angle =</span> alpha[i],
+                    <span class="dt">train =</span> offline,
+                    <span class="dt">.id =</span> <span class="st">&#39;point&#39;</span>)
+  err[i] &lt;-<span class="st"> </span><span class="kw">error_by_k</span>(<span class="dv">5</span>, results, actual)
+}
+
+<span class="kw">data_frame</span>(<span class="dt">alpha =</span> alpha, <span class="dt">err =</span> err) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(alpha, err)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_line</span>() <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">breaks =</span> alpha)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-84-1.png" width="672"  /></p>
+<p>We’re getting the smallest error around <span class="math inline">\(\alpha = 100\)</span> degrees. The minimum RMSE indicates that our location predictions are off by about 1.86 meters on average. This is somewhat worse than the paper’s best error distance of 1.65 meters, but still not too shabby. It would be better to choose <span class="math inline">\(k\)</span> and <span class="math inline">\(\alpha\)</span> by cross validation, but due to a lack of computing power on my crappy laptop I won’t do that here. Here is a map of predictions versus the actual locations for <span class="math inline">\(k=5\)</span> and <span class="math inline">\(\alpha=100\)</span>:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">results &lt;-<span class="st"> </span><span class="kw">map2_dfr</span>(Mlist,
+                    orientations,
+                    find_prob,
+                    <span class="dt">similarity_angle =</span> <span class="dv">100</span>,
+                    <span class="dt">train =</span> offline,
+                    <span class="dt">.id =</span> <span class="st">&#39;point&#39;</span>)
+
+preds &lt;-<span class="st"> </span><span class="kw">calculate_predictions</span>(results, <span class="dv">5</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">select</span>(x, y)
+
+online_with_preds &lt;-<span class="st"> </span>online <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY, orientation) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">bind_cols</span>(preds)
+
+offline <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">group_by</span>(posX, posY) <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">summarise</span>() <span class="op">%&gt;%</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(posX, posY)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">color =</span> <span class="st">&#39;grey60&#39;</span>, <span class="dt">size =</span> <span class="fl">0.5</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> ap, <span class="kw">aes</span>(x, y), <span class="dt">shape =</span> <span class="dv">15</span>, <span class="dt">size =</span> <span class="dv">2</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> online_with_preds, <span class="kw">aes</span>(posX, posY)) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">data =</span> online_with_preds, <span class="kw">aes</span>(x, y), <span class="dt">shape =</span> <span class="dv">8</span>) <span class="op">+</span>
+<span class="st">  </span><span class="kw">geom_segment</span>(<span class="dt">data =</span> online_with_preds, <span class="kw">aes</span>(<span class="dt">x =</span> posX, <span class="dt">y =</span> posY, <span class="dt">xend =</span> x, <span class="dt">yend =</span> y), <span class="dt">color =</span> <span class="st">&#39;dodgerblue&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-85-1.png" width="672"  /></p>
+<p>This probabilistic approach lends itself to interesting visualizations. We can use the same spline regression approach as before with <code>fields::Tps()</code> to create a contour map of the likeliest areas for each point. The hollow circles are the offline measurement locations, the asterisk is the predicted location, and the large filled gray circle is the actual location.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">i &lt;-<span class="st"> </span><span class="dv">29</span>
+r &lt;-<span class="st"> </span>results <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">filter</span>(point <span class="op">==</span><span class="st"> </span>i)
+smooth &lt;-<span class="st"> </span>fields<span class="op">::</span><span class="kw">Tps</span>(<span class="kw">cbind</span>(r<span class="op">$</span>posX, r<span class="op">$</span>posY), r<span class="op">$</span>pi)
+viz &lt;-<span class="st"> </span>fields<span class="op">::</span><span class="kw">predictSurface</span>(smooth)
+fields<span class="op">::</span><span class="kw">plot.surface</span>(viz, <span class="dt">type =</span> <span class="st">&#39;C&#39;</span>)
+<span class="kw">points</span>(<span class="kw">summarise</span>(<span class="kw">group_by</span>(offline, posX, posY))<span class="op">$</span>posX,
+       <span class="kw">summarise</span>(<span class="kw">group_by</span>(offline, posX, posY))<span class="op">$</span>posY,
+       <span class="dt">pch =</span> <span class="dv">21</span>, <span class="dt">lwd =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&#39;grey60&#39;</span>)
+<span class="kw">points</span>(online_with_preds<span class="op">$</span>posX[i],
+       online_with_preds<span class="op">$</span>posY[i],
+       <span class="dt">pch =</span> <span class="dv">20</span>, <span class="dt">cex =</span> <span class="fl">2.5</span>, <span class="dt">col =</span> <span class="st">&#39;grey80&#39;</span>)
+<span class="kw">points</span>(online_with_preds<span class="op">$</span>x[i],
+       online_with_preds<span class="op">$</span>y[i],
+       <span class="dt">pch =</span> <span class="dv">8</span>, <span class="dt">lwd =</span> <span class="fl">3.5</span>, <span class="dt">cex =</span> <span class="dv">2</span>, <span class="dt">col =</span> <span class="st">&#39;grey80&#39;</span>)</code></pre></div>
+<p><img src="_main_files/figure-html/unnamed-chunk-86-1.png" width="672"  /></p>
+
+</div>
+</div>
+<p style="text-align: center;">
+<a href="nearest-neighbor-methods-to-predict-location.html"><button class="btn btn-default">Previous</button></a>
+</p>
+</div>
+</div>
+
+
+
+</body>
+</html>
